@@ -1,0 +1,12 @@
+Package: rooky-control
+Version: 0.1-1
+Architecture: all
+Maintainer: Alek Yum
+Filename: ./rooky_0.1-1_all.deb
+Size: 138674
+MD5sum: fe13aeb142a739e949cd4796e49cb220
+SHA1: 59e3dadcde17c116d33226ff6ee0219f3b3caef2
+SHA256: 1f65d727971abcbec77b41fe6d327e2fa3b559bf9911f282573e0c253b2d2068
+Section: embedded
+Description: rooky control ROS packages
+
