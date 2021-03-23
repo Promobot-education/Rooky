@@ -2,12 +2,13 @@ Package: promobot-edu-control
 Version: 0.1-1
 Architecture: amd64
 Maintainer: LLC PROMOBOT
+Depends: ros-kinetic-gazebo-ros-control, ros-kinetic-rqt-joint-trajectory-controller
 Provides: promobot-edu-control
 Filename: ./promobot-edu-control_0.1-1_amd64.deb
-Size: 3640782
-MD5sum: 34061d2890b36ee417115de74afb3f3b
-SHA1: 17ea5777437a7165a3761b04468ed08e3d972c90
-SHA256: 878590dcb0c533716b74884239f1df4f62c9c3e6e21ce184b65e59b0e24a7834
+Size: 3633448
+MD5sum: 626a383d2a5655b0a5a008823590789c
+SHA1: fb1304ac8c6b59775cede032b71bb83a99ea25f7
+SHA256: 74bd8834b532a31e4d6df55d3928c0c757db928a1287852ecd05010aacc6574c
 Section: libdevel
 Description: Education packet with promobot arm simulation
 
