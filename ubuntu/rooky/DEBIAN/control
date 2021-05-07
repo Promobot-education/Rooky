@@ -1,6 +1,0 @@
-Package: rooky-control
-Version: 0.1-1
-Section: embedded
-Architecture: all
-Maintainer: Alek Yum
-Description: rooky control ROS packages
