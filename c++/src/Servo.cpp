@@ -1,15 +1,16 @@
 #include "Servo.h"
 
-const char *errors_list[9] = {
-	"COMMUNICATION",
-	"HALL_BOARD",
-	"WRONG_DIRECTION",
-	"OVERCURRENT",
-	"MAGNET_ERROR",
-	"ENCODER",
-	"DRV_ERR",
-	"DISABLED",
-	"REBOOTED"};
+const char *errors_list[9] =
+	{
+		"COMMUNICATION",
+		"HALL_BOARD",
+		"WRONG_DIRECTION",
+		"OVERCURRENT",
+		"MAGNET_ERROR",
+		"ENCODER",
+		"DRV_ERR",
+		"DISABLED",
+		"REBOOTED" };
 
 ServoData servo_data;
 
@@ -285,10 +286,10 @@ bool get_servo_data(int addr, ServoData &data)
 	data.ID = regData[0];
 	data.torque = regData[TORQUE_REG];
 	data.command = regData[COMMAND_REG];
-	data.setpoint = (int16_t)regData[SETPOINT_REG];
-	data.position = (int16_t)regData[POS_REG];
-	data.speed = (int16_t)regData[SPEED_REG];
-	data.current = (int16_t)regData[CURRENT_REG];
+	data.setpoint = (int16_t) regData[SETPOINT_REG];
+	data.position = (int16_t) regData[POS_REG];
+	data.speed = (int16_t) regData[SPEED_REG];
+	data.current = (int16_t) regData[CURRENT_REG];
 
 	f.i = regData[PID_POS_P_REG] | (regData[PID_POS_P_REG + 1] << 16);
 	data.pos_PID_P = f.f;
@@ -318,12 +319,45 @@ bool get_servo_data(int addr, ServoData &data)
 	return true;
 }
 
+bool get_ppm_servo_data(int addr, PpmServoData &data)
+{
+	int ret;
+	uint16_t regData[52] = {};
+	modbus_set_slave(ctx, addr);
+	ret = modbus_read_registers(ctx, 0, 52, regData);
+
+	if (ret == -1)
+	{
+		_dealWithModbusError(ctx, addr);
+		return false;
+	}
+
+	data.ID = regData[0];
+	data.torque = regData[PPM_TORQUE_REG];
+	data.command = regData[PPM_COMMAND_REG];
+	data.angle_1 = (int16_t) regData[PPM_ANGLE_1_REG];
+	data.angle_2 = (int16_t) regData[PPM_ANGLE_2_REG];
+	data.touch_1 = (int16_t) regData[PPM_TOUCH_1_REG];
+	data.touch_2 = (int16_t) regData[PPM_TOUCH_2_REG];
+	data.current = (int16_t) regData[PPM_CURRENT_REG];
+	data.voltage = (int16_t) regData[PPM_VOLTAGE_REG];
+
+	for (int i = 0; i < 9; i++)
+	{
+		if (regData[ERRORS_REG] & (1 << i))
+			data.errors[i] = errors_list[i];
+		else
+			data.errors[i] = nullptr;
+	}
+	return true;
+}
+
 bool read_touch(int addr, std::vector<int> &data)
 {
 	data.clear();
 	uint16_t values[2] = {};
 	modbus_set_slave(ctx, addr);
-	if (modbus_read_registers(ctx, TOUCH_1_REG, 2, values) < 0)
+	if (modbus_read_registers(ctx, PPM_TOUCH_1_REG, 2, values) < 0)
 	{
 		_dealWithModbusError(ctx, addr);
 		return false;
@@ -403,7 +437,7 @@ bool initServo(int addr)
 	return true;
 }
 
-bool initServoPpm(int addr)
+bool initServoPpm(int addr, int angle_1, int angle_2)
 {
 	int ret;
 	uint16_t regData = 1;
@@ -417,14 +451,14 @@ bool initServoPpm(int addr)
 		return false;
 	}
 
-	ret = modbus_write_register(ctx, PPM_SERVO_1_ANGLE_REG, 0);
+	ret = modbus_write_register(ctx, PPM_SERVO_1_ANGLE_REG, angle_1);
 	if (ret == -1)
 	{
 		_dealWithModbusError(ctx, addr);
 		return false;
 	}
 
-	ret = modbus_write_register(ctx, PPM_SERVO_2_ANGLE_REG, -90);
+	ret = modbus_write_register(ctx, PPM_SERVO_2_ANGLE_REG, angle_2);
 	if (ret == -1)
 	{
 		_dealWithModbusError(ctx, addr);

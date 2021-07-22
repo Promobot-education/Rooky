@@ -1,18 +1,11 @@
 /******************************************************************************
-     * File: bus_handle.c
-     * Description: Работа с шиной данных.
-******************************************************************************/
+ * File: bus_handle.c
+ * Description: Работа с шиной данных.
+ ******************************************************************************/
 #include "bus_handler.h"
 
 modbus_t *ctx = nullptr;
 
-/**
- * Инициализация порта шины MODBUS RTU.
- * @param const char *device - имя порта шины данных. Например /dev/RS485.
- * @param bool debug - включение режима отладки.
- * @return true если инициализация успешна, false если ошибка инициализации.
- * @note .
- */
 int init_port(const char *device, bool debug)
 {
 	ctx = modbus_new_rtu(device, 460800, 'N', 8, 1);
@@ -20,7 +13,7 @@ int init_port(const char *device, bool debug)
 	if (modbus_connect(ctx) == -1)
 	{
 		fprintf(stderr, "Connection failed: %s\n",
-				modbus_strerror(errno));
+			modbus_strerror(errno));
 		modbus_free(ctx);
 		return -1;
 	}
@@ -32,5 +25,5 @@ int init_port(const char *device, bool debug)
 void _dealWithModbusError(modbus_t *dev, int addr)
 {
 	fprintf(stderr, "Error on servo: %i. %s\n\n",
-			addr, modbus_strerror(errno));
+		addr, modbus_strerror(errno));
 }

@@ -1,4 +1,3 @@
-
 APP1 = move_joints
 APP2 = read_servos
 
