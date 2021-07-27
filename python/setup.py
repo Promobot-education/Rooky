@@ -21,5 +21,5 @@ setup(
     },
     description="Python modules to communicate with Rooky",
     python_requires=">=2.7",
-    py_modules=["Rooky"],
+    py_modules=["Rooky", "Servo_ppm"],
 )

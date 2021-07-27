@@ -16,13 +16,14 @@ import bus_handler
 import time
 
 import Servo
+import Servo_ppm
 
 _right_arm_servos = [21, 22, 23, 24, 25]
 _left_arm_servos = [31, 32, 33, 34, 35]
 
 
-_right_arm_servos_ppm = [26]
-_left_arm_servos_ppm = [36]
+_right_arm_ppm_addr = 26
+_left_arm_ppm_addr = 36
 
 
 joint_ratio = {}
@@ -32,14 +33,18 @@ joint_limints = {}
 joint_ratio['joint_1'] = 3
 joint_ratio['joint_2'] = 1.9
 joint_ratio['joint_3'] = 1.9
-joint_ratio['joint_4'] = 1.25
-joint_ratio['joint_5'] = 1.25
+joint_ratio['joint_4'] = 1.2
+joint_ratio['joint_5'] = 1.2
+joint_ratio['joint_6'] = 1.7
+joint_ratio['joint_7'] = 0.3
 
 joint_limints['joint_1'] = [-10, 90]
 joint_limints['joint_2'] = [-10, 90]
 joint_limints['joint_3'] = [-90, 90]
 joint_limints['joint_4'] = [-10, 90]
 joint_limints['joint_5'] = [-90, 90]
+joint_limints['joint_6'] = [-20, 35]
+joint_limints['joint_7'] = [0, 74]
 
 
 
@@ -51,11 +56,14 @@ class Rooky():
 	Args:
 		* port (str): имя посдеовательного порта манипулятора.
 		* side (str): Типа манипулятора. Левый или правый.
+		* debug (bool): Вывод отладочной информации в консоль.
 	
 	"""
-	def __init__(self,port,side = "left",debug = False):
+	def __init__(self, port, side = "left", debug = False):
 
+		self._rooky_side = side
 		self._arm_servos = []
+		self._arm_ppm_servos = []
 
 		self._servos_id_list = []
 
@@ -68,34 +76,35 @@ class Rooky():
 		self._cur_setp['joint_5'] = 0
 
 
-		if side in _rooky_parts: 
-
+		if side in _rooky_parts:
 
 			self.master = bus_handler.Bus(port = port, baudrate = 460800, debug = debug, timeout = 1.0)
 
 			if side == 'right':
 				self._servos_id_list = _right_arm_servos
-				self.servos_ppm = _right_arm_servos_ppm
+				self._ppm_addr = _right_arm_ppm_addr
+				self._ppm_start_pos = (0, 90)
 
 			if side == 'left':
 				self._servos_id_list = _left_arm_servos
-				self.servos_ppm = _left_arm_servos_ppm   
+				self._ppm_addr = _left_arm_ppm_addr   
+				self._ppm_start_pos = (0, -90)
 
 
 			for i in self._servos_id_list:
 				self._arm_servos.append(Servo.Servo(i,self.master.bus))
 
+			self._arm_ppm_servos.append(Servo_ppm.Servo_ppm(self._ppm_addr, self.master.bus, 1, self._ppm_start_pos[0]))
+			self._arm_ppm_servos.append(Servo_ppm.Servo_ppm(self._ppm_addr, self.master.bus, 2, self._ppm_start_pos[1]))
 
 			for servo in self._arm_servos:	
-
 				servo.set_command(0x0)
 				servo.set_speed_limit(10)
 				servo.set_torque(True)
 				servo.set_point(0)
 
-
-
-		time.sleep(5)		
+			self._untouched_values = self._arm_ppm_servos[0].read_touch()
+		time.sleep(3)		
 
 
 	def _degrees_to_ticks(self,deg):
@@ -113,7 +122,6 @@ class Rooky():
 
 
 
-
 	def _move_simple_joint(self,name,speed,position):
 
 		if (self._check_limits(name,position)):
@@ -128,7 +136,6 @@ class Rooky():
 
 		else:
 			return -1
-
 
 
 	def _move_diff_joint(self,name,speed):
@@ -165,7 +172,6 @@ class Rooky():
 			self._arm_servos[4].set_point(self._cur_setp['joint_4'] - self._cur_setp['joint_5'])
 
 
-
 	def _set_diff_joint(self,name,speed,position):
 
 
@@ -177,7 +183,13 @@ class Rooky():
 		else:
 			return -1
 
-
+	def _move_servo_joint(self, name, position):
+		if name == 'joint_6':
+			self._arm_ppm_servos[0].set_point(position * joint_ratio[name])
+		elif name == 'joint_7' and self._rooky_side is "left":
+			self._arm_ppm_servos[1].set_point(self._ppm_start_pos[1] + position * joint_ratio[name])
+		elif name == 'joint_7' and self._rooky_side is "right":
+			self._arm_ppm_servos[1].set_point(self._ppm_start_pos[1] - position * joint_ratio[name])
 
 	def _check_erros(self,data):
 
@@ -196,21 +208,57 @@ class Rooky():
 		
 		"""
 		if joint_name == 'joint_1':
-			self._move_simple_joint(joint_name,speed,position)
+			self._move_simple_joint(joint_name, speed, position)
 
 		if joint_name == 'joint_2':
-			self._set_diff_joint(joint_name,speed,position)
+			self._set_diff_joint(joint_name, speed, position)
 
 		if joint_name == 'joint_3':
-			self._set_diff_joint(joint_name,speed,position) 
+			self._set_diff_joint(joint_name, speed, position) 
 
 		if joint_name == 'joint_4':
-			self._set_diff_joint(joint_name,speed,position)       
+			self._set_diff_joint(joint_name, speed, position)       
 
 		if joint_name == 'joint_5':
-			self._set_diff_joint(joint_name,speed,position) 
+			self._set_diff_joint(joint_name, speed, position)
+
+		if joint_name == 'joint_6':
+			self._move_servo_joint(joint_name, position)
+
+		if joint_name == 'joint_7':
+			self._move_servo_joint(joint_name, position)
 
 
+	def read_touch(self):
+		"""Чтение данных с датчиков касания
+
+        Args:
+            None
+        Returns:
+            * Словарь с ключами:
+                | "Touch_1"
+                | "Touch_2"
+
+        Raises:
+            None
+
+        """
+		return self._arm_ppm_servos[0].read_touch()
+
+	def is_touched(self):
+		"""Есть ли факт касания датчика касания
+
+        Args:
+            None
+        Returns: True - есть касание датчика
+				 False - нет касания датчика
+
+        """
+		vals = self._arm_ppm_servos[0].read_touch()
+		if vals["Touch_1"] < self._untouched_values["Touch_1"] * 0.95 or vals["Touch_2"] < self._untouched_values["Touch_2"] * 0.95:
+			return True
+		else:
+			return False
 
 
 	def relax(self,state):
@@ -223,9 +271,13 @@ class Rooky():
 		if state:
 			for servo in self._arm_servos:
 				servo.set_command(0xAAAA)
+			self._arm_ppm_servos[0].set_torque(0)
+			
 		else:
 			for servo in self._arm_servos:
 				servo.set_command(0x0)
+			self._arm_ppm_servos[0] = Servo_ppm.Servo_ppm(self._ppm_addr,self.master.bus, 1, self._ppm_start_pos[0])
+			self._arm_ppm_servos[1] = Servo_ppm.Servo_ppm(self._ppm_addr,self.master.bus, 2, self._ppm_start_pos[1])
 
 
 
@@ -233,7 +285,7 @@ class Rooky():
 		"""Чтение данных.
 
 		Args:
-			* state (bool):True - отключить питание. False - включить питание.
+			None
 		
 		"""
 		_servo_data = [None] * len(self._arm_servos)
@@ -246,6 +298,8 @@ class Rooky():
 				print(self._servos_id_list)
 				print("ERROR! Cant read servo: %d" % (self._servos_id_list[i])) 
 			i = i + 1
+		for ppm in self._arm_ppm_servos:
+			_servo_data.append(ppm.get_data())
 
 		return _servo_data
 
