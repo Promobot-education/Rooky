@@ -1,5 +1,12 @@
 #include "Rooky.h"
+#ifdef __unix__
 #include <unistd.h>
+#define _msleep(x) usleep(x * 1000)
+#else
+#include <windows.h>
+#define _msleep(x) Sleep(x)
+#endif
+
 
 int main()
 {
@@ -44,7 +51,7 @@ int main()
 	{
 		INFO("Move joint - %s, speed - %.2f, to position - %.2f\n", action.name.c_str(), action.speed, action.position);
 		moveJoint(action.name, action.speed, action.position);
-		sleep(1);
+		_msleep(1000);
 	}
 
 	// Расслабим руку

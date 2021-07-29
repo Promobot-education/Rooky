@@ -1,6 +1,12 @@
 #include "Rooky.h"
-#include <unistd.h>
 #include <vector>
+#ifdef __unix__
+#include <unistd.h>
+#define _msleep(x) usleep(x * 1000)
+#else
+#include <windows.h>
+#define _msleep(x) Sleep(x)
+#endif
 
 // Создадим вектор адресов сервоприводов для левой руки
 const std::vector<int> LEFT_ARM_SERVOS = { 31, 32, 33, 34, 35, 36 };
@@ -75,7 +81,7 @@ int main()
 		datas.clear();
 
 		// Установим задержку в 100мс
-		usleep(100000);
+		_msleep(100);
 	}
 	return 0;
 }
