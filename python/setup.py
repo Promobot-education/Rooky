@@ -21,5 +21,6 @@ setup(
     },
     description="Python modules to communicate with Rooky",
     python_requires=">=2.7",
-    py_modules=["Rooky", "Servo_ppm"],
+    packages=['modbus_tk'],
+    py_modules=["Rooky", "Servo_ppm", "Servo", "modbus_io", "bus_handler"],
 )

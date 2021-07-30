@@ -1,6 +1,6 @@
 # Promobot Rooky
 
-![img](/logo.png)
+![img](/Rooky.jpg)
 
 **Promobot Rooky** - это платформа для изучения робототехники в составе комплекса Promobot Education. 
 

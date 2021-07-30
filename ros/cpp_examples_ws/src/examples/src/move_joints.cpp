@@ -14,7 +14,7 @@ enum RookySide
 int main(int argc, char **argv)
 {
 	// Определим тип Rooky
-	RookySide rooky_side = RIGHT;
+	RookySide rooky_side = LEFT;
 
 	// Инициализируем ROS с указанием названия узла
 	ros::init(argc, argv, "move_joints");

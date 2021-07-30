@@ -1,0 +1,2 @@
+SUBSYSTEMS=="usb", KERNEL=="ttyUSB[0-9]*",RUN+="/bin/setserial /dev/%k low_latency"
+SUBSYSTEMS=="usb", KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="666", SYMLINK+="RS_485", GROUP="dialout"
